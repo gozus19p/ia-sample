@@ -1,0 +1,6 @@
+*.gz
+*.iml
+venv/
+.idea/
+aclImdb/
+model/
