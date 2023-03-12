@@ -1,5 +1,6 @@
 import os
 import shutil
+import tensorflow as tf
 
 from tensorflow.keras import layers
 from tensorflow.keras import losses
@@ -87,6 +88,8 @@ model = tf.keras.Sequential([
 
 def vectorize_text(text, label):
     text = tf.expand_dims(text, -1)
+    # Applica la vectorization al testo restituendo un tensore di rango 2 con il testo vettorizzato come prima
+    # dimensione e la label (pos/neg) come seconda dimensione
     return vectorize_layer(text), label
 
 
