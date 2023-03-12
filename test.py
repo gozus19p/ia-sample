@@ -1,14 +1,13 @@
 import os
-import re
 import shutil
-import string
 
-import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import losses
 
+import training
+
 # Leggo il dataset da un URL
-dataset = tf.keras.utils.get_file(
+dataset = training.download_file(
     # Nome del file
     fname="aclImdb_v1",
 
@@ -16,11 +15,7 @@ dataset = tf.keras.utils.get_file(
     origin="https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
 
     # Posto a `True`, consente di scompattare l'archivio
-    untar=True,
-
-    # Directory di cache e subdirectory di cache
-    cache_dir='.',
-    cache_subdir=''
+    untar=True
 )
 
 # Recupera il path del dataset e ci aggiunge in coda `aclImdb`
@@ -38,8 +33,7 @@ shutil.rmtree(remove_dir)
 batch_size = 32
 seed = 42
 
-raw_train_ds = tf.keras.utils.text_dataset_from_directory(
-
+raw_train_ds = training.training_dataset_from_directory(
     # Directory da cui vengono presi i dati. Seguono le note della documentazione:
     #
     #       directory: Directory where the data is located.
@@ -47,25 +41,18 @@ raw_train_ds = tf.keras.utils.text_dataset_from_directory(
     #       subdirectories, each containing text files for a class.
     #       Otherwise, the directory structure is ignored.
     directory='aclImdb/train',
-
     # Dimensione del batch
     batch_size=batch_size,
-
     # Frazione opzionale di dati da conservare per la validazione
     validation_split=0.2,
-
-    # Specifica che i dati sono di addestramento e non di controllo (validazione)
-    subset='training',
-
     seed=seed
 )
 
 # Dataset per la validazione
-raw_val_ds = tf.keras.utils.text_dataset_from_directory(
-    'aclImdb/train',
+raw_val_ds = training.validation_dataset_from_directory(
+    directory="aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
-    subset='validation',
     seed=seed
 )
 
@@ -79,17 +66,8 @@ embedding_dim = 16
 max_features = 10000
 sequence_length = 250
 
-
-def custom_standardization(input_data):
-    lowercase = tf.strings.lower(input_data)
-    stripped_html = tf.strings.regex_replace(lowercase, '<br />', ' ')
-    return tf.strings.regex_replace(stripped_html,
-                                    '[%s]' % re.escape(string.punctuation),
-                                    '')
-
-
 vectorize_layer = layers.TextVectorization(
-    standardize=custom_standardization,
+    standardize=training.custom_standardization,
     max_tokens=max_features,
     output_mode='int',
     output_sequence_length=sequence_length)
